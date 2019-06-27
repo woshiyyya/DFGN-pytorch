@@ -6,7 +6,7 @@ A pytorch implementation of our ACL2019 paper [(arXiv)](https://arxiv.org/abs/19
 >Yunxuan Xiao, Yanru Qu, Lin Qiu, Hao Zhou, Lei Li, Weinan Zhang, Yong Yu  
 >Accepted by ACL 2019  
   
-<img src="./example.png" width="50%" height="50%" />
+<img src="./example.png" width="90%" height="50%" />
 
 This repo is still under construction. Currently, we have provided the core code of DFGN and pretrained checkpoints.
 Although the pre-processing part is not available now, we provide processed data for you to start training.
