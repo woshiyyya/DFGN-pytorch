@@ -2,18 +2,19 @@
 
 A pytorch implementation of our ACL2019 paper [(arXiv)](https://arxiv.org/abs/1905.06933)
 
-**Dynamically Fused Graph Network for Multi-hop Reasoning**  
-Yunxuan Xiao, Yanru Qu, Lin Qiu, Hao Zhou, Lei Li, Weinan Zhang, Yong Yu  
-Accepted by ACL 2019
-
-<img src="./example.png" width="50%", height="50%" />
+>**Dynamically Fused Graph Network for Multi-hop Reasoning**  
+>Yunxuan Xiao, Yanru Qu, Lin Qiu, Hao Zhou, Lei Li, Weinan Zhang, Yong Yu  
+>Accepted by ACL 2019  
+  
+<img src="./example.png" width="50%" height="50%" />
 
 This repo is still under construction. Currently, we have provided the core code of DFGN and pretrained checkpoints.
 Although the pre-processing part is not available now, we provide processed data for you to start training.
 Feel free to contact us if you have any questions.
 
 Our result has been published on [HotpotQA Leaderboard](https://hotpotqa.github.io/).
-### Requirements
+
+## Requirements
 python 3, pytorch 0.4.1, boto3
 
 To install pytorch 0.4.1, you can follow the instruction on this page https://pytorch.org/get-started/previous-versions/.
@@ -28,7 +29,7 @@ pip install boto3
 ```
 
 
-### Download Data
+## Download Data
 
 #### Bert Models
 Firstly, you should download and set bert pretrained model and vocabulary properly.
@@ -85,7 +86,7 @@ The second one can evaluate all predictions in a folder. For example you have pr
 python hotpot_evaluate_all.py output/submissions/YOUR_EXPNAME data/hotpot_dev_distractor_v1.json
 ```
 
-### Inference using our released model 
+## Inference using our released model 
 ```bash
 python predict.py
 python hotpot_evaluate_v1.py output/submissions/prediction.json data/hotpot_dev_distractor_v1.json
