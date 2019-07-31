@@ -29,7 +29,8 @@ def set_config():
     parser.add_argument("--checkpoint_path", type=str, default=join(data_path, 'checkpoints'))
 
     parser.add_argument("--ckpt_id", type=int, default=0)
-    parser.add_argument("--bert_model", type=str, default='bert-base-uncased')
+    parser.add_argument("--bert_model", type=str, default='bert-base-uncased',
+                        help='Currently only support bert-base-uncased and bert-large-uncased')
 
     # learning and log
     parser.add_argument("--epochs", type=int, default=30)
