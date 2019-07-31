@@ -6,7 +6,7 @@ A pytorch implementation of our ACL2019 paper [(arXiv)](https://arxiv.org/abs/19
 >Yunxuan Xiao, Yanru Qu, Lin Qiu, Hao Zhou, Lei Li, Weinan Zhang, Yong Yu  
 >Accepted by ACL 2019  
   
-<img src="./example.png" width="50%" height="50%" />
+<img src="./example.png" width="90%" height="50%" />
 
 This repo is still under construction. Currently, we have provided the core code of DFGN and pretrained checkpoints.
 Although the pre-processing part is not available now, we provide processed data for you to start training.
@@ -71,7 +71,12 @@ CUDA_VISIBLE_DEVICES=0,1 python train.py --name=YOUR_EXPNAME --q_update --q_attn
 ```
 If an OOM exception occurs, you may try to set a smaller batch size with gradient_accumulate_step > 1.
 
-Your predictions and checkpoints in each epoch will be stored in *./output* directory.
+Your predictions and checkpoints in each epoch will be stored in *./output* directory. By running local evaluation script, you may get results like this:
+
+|best iter|em|f1|pr|re|sp_em|sp_f1|sp_pr|sp_re|jt_em|jt_f1|jt_pr|jt_re|  
+|-|-|-|-|-|-|-|-|-|-|-|-|-|
+|epxx|	0.5542|	0.6909|	0.7169	|0.7039|	0.5218|	0.8196|	0.8604|	0.8098|	0.3325|	0.5942|	0.6435|	0.5993|
+
 
 ## Local Evaluation
 There are two evaluation scripts here.
