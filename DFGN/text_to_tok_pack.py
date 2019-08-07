@@ -3,37 +3,15 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
-import collections
-import logging
 import json
-import math
-import os
-import random
-import pickle
-from tqdm import tqdm, trange
-from os.path import join
 import gzip
-from collections import Counter
-import re
-import numpy as np
-import torch
-from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
-from torch.utils.data.distributed import DistributedSampler
+import pickle
+from tqdm import tqdm
 
-from pytorch_pretrained_bert.tokenization import whitespace_tokenize, BasicTokenizer, BertTokenizer
-from pytorch_pretrained_bert.modeling import BertModel
-from pytorch_pretrained_bert.optimization import BertAdam
-from pytorch_pretrained_bert.file_utils import PYTORCH_PRETRAINED_BERT_CACHE
+from pytorch_pretrained_bert.tokenization import BertTokenizer
 
 
-tokenizer = BertTokenizer.from_pretrained('bert-large-uncased')
-
-"""
-1. Add Segment ID
-2. Cat Query at start (q limit)
-3. Change Span start position
-4. Take care of entity location order
-"""
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
 
 class Example(object):
@@ -146,15 +124,12 @@ def read_hotpot_examples(para_file, full_file, entity_file):
             return True
         return False
 
-    examples = []
-
-    # for debug
     cnt = 0
+    examples = []
     for case in tqdm(full_data):
         key = case['_id']
         qas_type = ""  # case['type']
         sup_facts = set()  # set([(sp[0], sp[1])for sp in case['supporting_facts']])
-        # orig_answer_text = case['answer']
 
         sent_id = 0
         doc_tokens = []
@@ -164,9 +139,6 @@ def read_hotpot_examples(para_file, full_file, entity_file):
         para_start_end_position = []
         entity_start_end_position = []
         ans_start_position, ans_end_position = [], []
-
-        # JUDGE_FLAG = orig_answer_text == 'yes' or orig_answer_text == 'no'
-        # FIND_FLAG = False
 
         char_to_word_offset = []  # Accumulated along all sentences
         prev_is_whitespace = True
@@ -212,24 +184,6 @@ def read_hotpot_examples(para_file, full_file, entity_file):
                 sent_end_word_id = len(doc_tokens) - 1
                 sent_start_end_position.append((sent_start_word_id, sent_end_word_id))
 
-                # Answer char position
-                # answer_offsets = []
-                # offset = -1
-                # while True:
-                #     offset = sent.find(orig_answer_text, offset + 1)
-                #     if offset != -1:
-                #         answer_offsets.append(offset)
-                #     else:
-                #         break
-                #
-                # if not JUDGE_FLAG and not FIND_FLAG and len(answer_offsets) > 0:
-                #     FIND_FLAG = True
-                #     for answer_offset in answer_offsets:
-                #         start_char_position = sent_start_char_id + answer_offset
-                #         end_char_position = start_char_position + len(orig_answer_text) - 1
-                #         ans_start_position.append(char_to_word_offset[start_char_position])
-                #         ans_end_position.append(char_to_word_offset[end_char_position])
-
                 # Find Entity Position
                 entity_pointer = 0
                 find_start_index = 0
@@ -268,7 +222,7 @@ def read_hotpot_examples(para_file, full_file, entity_file):
             para_start_end_position=para_start_end_position,
             sent_start_end_position=sent_start_end_position,
             entity_start_end_position=entity_start_end_position,
-            orig_answer_text="",  # orig_answer_text,
+            orig_answer_text="",
             start_position=ans_start_position,
             end_position=ans_end_position)
         examples.append(example)
@@ -279,15 +233,8 @@ def read_hotpot_examples(para_file, full_file, entity_file):
 def convert_examples_to_features(examples, tokenizer, max_seq_length, max_query_length):
     features = []
     failed = 0
-    ans_failed = 0
     for (example_index, example) in enumerate(tqdm(examples)):
         ans_type = 0
-        # if example.orig_answer_text == 'yes':
-        #     ans_type = 1
-        # elif example.orig_answer_text == 'no':
-        #     ans_type = 2
-        # else:
-        #     ans_type = 0
 
         query_tokens = ["[CLS]"] + tokenizer.tokenize(example.question_text)
         if len(query_tokens) > max_query_length - 1:
@@ -332,10 +279,6 @@ def convert_examples_to_features(examples, tokenizer, max_seq_length, max_query_
                 all_doc_tokens, tok_start_position, tok_end_position, tokenizer, orig_text)
 
         ans_start_position, ans_end_position = [], []
-        # for ans_start_pos, ans_end_pos in zip(example.start_position, example.end_position):
-        #     s_pos, e_pos = relocate_tok_span(ans_start_pos, ans_end_pos, example.orig_answer_text)
-        #     ans_start_position.append(s_pos)
-        #     ans_end_position.append(e_pos)
 
         for entity_span in example.entity_start_end_position:
             ent_start_position, ent_end_position \
@@ -442,7 +385,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # Required parameters
-    parser.add_argument("--bert_model", default='bert-base-cased', type=str)
+    parser.add_argument("--entity_path", required=True, type=str)
+    parser.add_argument("--para_path", required=True, type=str)
+    parser.add_argument("--example_output", required=True, type=str)
+    parser.add_argument("--feature_output", required=True, type=str)
 
     # Other parameters
     parser.add_argument("--do_lower_case", default=True, action='store_true',
@@ -452,19 +398,16 @@ if __name__ == '__main__':
                         help="The maximum total input sequence length after WordPiece tokenization. Sequences longer "
                              "than this will be truncated, and sequences shorter than this will be padded.")
     parser.add_argument("--batch_size", default=15, type=int, help="Batch size for predictions.")
+    parser.add_argument("--full_data", type=str, required=True)
 
     args = parser.parse_args()
 
-    para_path = join('..', 'paragraph_selection', 'selected_paras.json')
-    full_path = join('..', 'input.json')
-    entity_path = join('..', 'ner', 'entities.json')
-    
-    examples = read_hotpot_examples(para_file=para_path, full_file=full_path, entity_file=entity_path)
-    with gzip.open('examples.pkl.gz', 'wb') as fout:
+    examples = read_hotpot_examples(para_file=args.para_path, full_file=args.full_data, entity_file=args.entity_path)
+    with gzip.open(args.example_output, 'wb') as fout:
         pickle.dump(examples, fout)
-        
+
     features = convert_examples_to_features(examples, tokenizer, max_seq_length=512, max_query_length=50)
-    with gzip.open('features.pkl.gz', 'wb') as fout:
+    with gzip.open(args.feature_output, 'wb') as fout:
         pickle.dump(features, fout)
 
 

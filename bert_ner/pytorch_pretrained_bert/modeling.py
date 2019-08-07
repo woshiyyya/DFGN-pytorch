@@ -39,8 +39,8 @@ logger = logging.getLogger(__name__)
 
 PRETRAINED_MODEL_ARCHIVE_MAP = {
     'bert-base-uncased': "/home/yunxuanxiao/xyx/data/BERT_Pretrained/bert-base-uncased.tar.gz",
-    'bert-base-cased': "bert_models/bert-base-cased.tar.gz",
-    'bert-large-uncased': "bert_models/bert-large-uncased.tar.gz",
+    'bert-base-cased': "/home/yunxuanxiao/xyx/data/BERT_Pretrained/bert-base-cased.tar.gz",
+    'bert-large-uncased': "/home/yunxuanxiao/xyx/data/BERT_Pretrained/bert-large-uncased.tar.gz",
     # 'bert-base-uncased': "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-uncased.tar.gz",
     # 'bert-large-uncased': "https://s3.amazonaws.com/models.huggingface.co/bert/bert-large-uncased.tar.gz",
     # 'bert-base-cased': "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-cased.tar.gz",
@@ -605,7 +605,7 @@ class BertModel(PreTrainedBertModel):
         super(BertModel, self).__init__(config)
         self.embeddings = BertEmbeddings(config)
         self.encoder = BertEncoder(config)
-        # self.pooler = BertPooler(config)
+        self.pooler = BertPooler(config)
         self.apply(self.init_bert_weights)
 
     def forward(self, input_ids, token_type_ids=None, attention_mask=None, output_all_encoded_layers=True):
@@ -626,18 +626,18 @@ class BertModel(PreTrainedBertModel):
         # positions we want to attend and -10000.0 for masked positions.
         # Since we are adding it to the raw scores before the softmax, this is
         # effectively the same as removing these entirely.
-        extended_attention_mask = extended_attention_mask.to(dtype=next(self.parameters()).dtype)  # fp16 compatibility
+        extended_attention_mask = extended_attention_mask.to(dtype=next(self.parameters()).dtype) # fp16 compatibility
         extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
 
         embedding_output = self.embeddings(input_ids, token_type_ids)
         encoded_layers = self.encoder(embedding_output,
                                       extended_attention_mask,
                                       output_all_encoded_layers=output_all_encoded_layers)
-        # sequence_output = encoded_layers[-1]
-        # pooled_output = self.pooler(sequence_output)
+        sequence_output = encoded_layers[-1]
+        pooled_output = self.pooler(sequence_output)
         if not output_all_encoded_layers:
             encoded_layers = encoded_layers[-1]
-        return encoded_layers#, pooled_output
+        return encoded_layers, pooled_output
 
 
 class BertForPreTraining(PreTrainedBertModel):
@@ -1093,6 +1093,7 @@ class BertForQuestionAnswering(PreTrainedBertModel):
     def __init__(self, config):
         super(BertForQuestionAnswering, self).__init__(config)
         self.bert = BertModel(config)
+        # TODO check with Google if it's normal there is no dropout on the token classifier of SQuAD in the TF version
         # self.dropout = nn.Dropout(config.hidden_dropout_prob)
         self.qa_outputs = nn.Linear(config.hidden_size, 2)
         self.apply(self.init_bert_weights)

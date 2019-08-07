@@ -12,8 +12,7 @@ import time
 import random
 from config import set_config
 from tools.data_helper import DataHelper
-from Feature_extraction.text_to_tok_pack import InputFeatures, Example
-
+from text_to_tok_pack import *
 
 BUF_SIZE = 5
 data_queue = queue.Queue(BUF_SIZE)

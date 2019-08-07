@@ -36,21 +36,6 @@ Firstly, you should download and set bert pretrained model and vocabulary proper
 You can find the download links in *pytorch_pretrained_bert/modeling.py* row **40-51**, and *pytorch_pretrained_bert/tokenization.py* row **30-41**.
 After you finish downloading, you should replace the dict value with your own local path accordingly.
 
-#### Training Data
-Next download our preprocessed train & dev data of HotpotQA distractor setting.
-The original HotpotQA dataset is available in https://hotpotqa.github.io/.
-
-- [data.tar.gz](https://drive.google.com/open?id=1jBpCHCNaDPPAbkZ-UOhXVeYrvhKVjiiU)
-
-Extract all compressed files into **DFGN-pytorch/data** folder.
-```bash
-cd DFGN-pytorch
-mkdir data
-tar -xvzf ./data.tar.gz -C data
-cd data
-wget http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json
-```
-
 
 #### Released Checkpoints
 We also released our pretrained model for reproduction.
@@ -58,8 +43,41 @@ We also released our pretrained model for reproduction.
 - [DFGN-base.tar.gz](https://drive.google.com/open?id=1yXiUyG4MzdommTp450VulfEPy5vXkkI1)
 
 ```bash
-mkdir ckpt
-tar -xvzf ./DFGN-base.tar.gz -C ckpt
+mkdir DFGN/ckpt
+tar -xvzf ./DFGN-base.tar.gz -C DFGN/ckpt
+```
+
+#### Preprocessed Data
+Next download our preprocessed train & dev data of HotpotQA distractor setting.
+
+- [data.tar.gz](https://drive.google.com/open?id=1jBpCHCNaDPPAbkZ-UOhXVeYrvhKVjiiU)
+
+Extract all compressed files into **DFGN/data** folder.
+```bash
+cd DFGN-pytorch/DFGN
+mkdir data
+tar -xvzf ./data.tar.gz -C data
+cd data
+wget http://curtis.ml.cmu.edu/datasets/hotpot/hotpot_dev_distractor_v1.json
+```
+Also you can preprocess by yourself following the instructions in the next section.
+The official HotpotQA data is available in https://hotpotqa.github.io/. 
+
+
+## Preprocess
+Previously we provided intermediate data files for training DFGN. Now we published the code for preprocessing.
+The preprocessing phase consists of paragraph selection, named entity recognition, and graph construction.
+
+First, download model checkpoints and save them in **./work_dir**
+
+- [bert_ner.pt](https://drive.google.com/open?id=1arXwD89DtVNOOC49CMoXP3-iiIkOMrI-)
+- [para_select_model.bin](https://drive.google.com/open?id=1tcBCs3Td6pAAmO6DIvqyUfI66XHqSlVE)
+
+Then run preprocess.sh as below, replacing ${INPUT_FILE} as the official train/dev file, and ${OUTPUT_DIR} as any name you like. You can finally
+ get all preprocessed files in **\work_dir\OUTPUT_DIR** 
+
+```bash
+CUDA_VISIBLE_DEVICES=0 bash preprocess.sh ${INPUT_FILE} ${OUTPUT_DIR}
 ```
 
 
@@ -67,6 +85,7 @@ tar -xvzf ./DFGN-base.tar.gz -C ckpt
 To train a DFGN model, we need at least 2 GPUs (One for BERT encoding, one for DFGN model).
 Now training with default parameters:
 ```bash
+cd DFGN
 CUDA_VISIBLE_DEVICES=0,1 python train.py --name=YOUR_EXPNAME --q_update --q_attn --basicblock_trans --bfs_clf
 ```
 If an OOM exception occurs, you may try to set a smaller batch size with gradient_accumulate_step > 1.

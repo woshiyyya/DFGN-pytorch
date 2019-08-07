@@ -1,9 +1,3 @@
-import argparse
-from os.path import join
-import pickle
-import gzip
-import torch
-from tqdm import tqdm
 from pytorch_pretrained_bert.modeling import BertModel
 from model.GFN import *
 from utils import *
@@ -11,7 +5,7 @@ from tools.data_iterator_pack import IGNORE_INDEX
 import numpy as np
 from config import set_config
 from tools.data_iterator_pack import DataIteratorPack
-from Feature_extraction.text_to_tok_pack import Example, InputFeatures
+from text_to_tok_pack import *
 
 
 def large_batch_encode(bert_model, batch, encoder_gpus, max_bert_bsz):
