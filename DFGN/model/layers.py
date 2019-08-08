@@ -136,10 +136,10 @@ class GATSelfAttention(nn.Module):
                 q_gate = F.relu(torch.matmul(query_vec, self.qattn_W1[i]))
                 q_gate = torch.sigmoid(torch.matmul(q_gate, self.qattn_W2[i]))
                 a_input = a_input * q_gate[:, None, None, :]
-                scores = self.act(torch.matmul(a_input, self.a_type[i]).squeeze(3))
+                score = self.act(torch.matmul(a_input, self.a_type[i]).squeeze(3))
             else:
-                scores = self.act(torch.matmul(a_input, self.a_type[i]).squeeze(3))
-            scores += torch.where(adj == i+1, scores, zero_vec)
+                score = self.act(torch.matmul(a_input, self.a_type[i]).squeeze(3))
+            scores += torch.where(adj == i+1, score, zero_vec)
 
         zero_vec = -9e15 * torch.ones_like(scores)
         scores = torch.where(adj > 0, scores, zero_vec)
