@@ -726,16 +726,16 @@ def create_entity_graph(case, max_entity_num, para_limit, graph_type, self_loop,
             entity_mapping[uid, es:ed+1] = 1
 
         start_entities = np.zeros(max_entity_num, dtype=np.float32)
-        # for qe in case.query_entities:
-        #     for uid, eids in id_ent_dict.items():
-        #         for eid in eids:
-        #             if _same_ent(qe, entities[eid][2], same_para=True):
-        #                 start_entities[uid] = 1
+        for qe in case.query_entities:
+            for uid, eids in id_ent_dict.items():
+                for eid in eids:
+                    if _same_ent(qe, entities[eid][2], same_para=True):
+                        start_entities[uid] = 1
         answer_entities = np.zeros(max_entity_num, dtype=np.float32)
-        # for i, ent in enumerate(entities):
-        #     if normalize_answer(ent[2]) == normalize_answer(case.answer):
-        #         answer_entities[i] = 1
-        #
+        for i, ent in enumerate(entities):
+            if normalize_answer(ent[2]) == normalize_answer(case.answer):
+                answer_entities[i] = 1
+
         entity_length = len(id_ent_dict)
 
         if debug:
@@ -802,15 +802,15 @@ def create_entity_graph(case, max_entity_num, para_limit, graph_type, self_loop,
             entity_mapping[i, es:ed+1] = 1
 
         start_entities = np.zeros(max_entity_num, dtype=np.float32)
-        # for qe in case.query_entities:
-        #     for i, ent in enumerate(entities):
-        #         if _same_ent(qe, ent[2], same_para=True):
-        #             start_entities[i] = 1
+        for qe in case.query_entities:
+            for i, ent in enumerate(entities):
+                if _same_ent(qe, ent[2], same_para=True):
+                    start_entities[i] = 1
 
         answer_entities = np.zeros(max_entity_num, dtype=np.float32)
-        # for i, ent in enumerate(entities):
-        #     if normalize_answer(ent[2]) == normalize_answer(case.answer):
-        #         answer_entities[i] = 1
+        for i, ent in enumerate(entities):
+            if normalize_answer(ent[2]) == normalize_answer(case.answer):
+                answer_entities[i] = 1
         ent_id_dict = {}
         id_ent_dict = {}
         entity_length = len(entities)

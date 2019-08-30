@@ -9,11 +9,12 @@ from argparse import ArgumentParser
 
 def iter_data():
 
-    def foo(features, examples):
+    def foo(features, examples, query_entities):
         entity_cnt = []
         entity_graphs = {}
         for case in tqdm(features):
             case.__dict__['answer'] = examples[case.qas_id].orig_answer_text
+            case.__dict__['query_entities'] = [ent[0] for ent in query_entities[case.qas_id]]
             graph = create_entity_graph(case, 80, 512, 'sent', False, False, relational=False)
             entity_cnt.append(graph['entity_length'])
 
@@ -36,13 +37,17 @@ def iter_data():
     with gzip.open(args.feature_path, 'rb') as fin:
         features = pickle.load(fin)
 
-    foo(features, example_dict)
+    with open(args.query_entity_path, 'r') as fin:
+        query_entities = json.load(fin)
+
+    foo(features, example_dict, query_entities)
 
 
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--example_path', required=True, type=str)
     parser.add_argument('--feature_path', required=True, type=str)
-    parser.add_argument('--graph_path', required=True, type=str)
+    parser.add_argument('--feature_path', required=True, type=str)
+    parser.add_argument('--query_entity_path', required=True, type=str)
     args = parser.parse_args()
     iter_data()

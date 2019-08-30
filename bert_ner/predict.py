@@ -149,9 +149,13 @@ if __name__=='__main__':
     parser.add_argument('--input_path', type=str, default='work_dir/selected_paras.json')
     parser.add_argument('--output_path', type=str, default='work_dir/entities.json')
     parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument('--use_query', action='store_true')
     args = parser.parse_args()
 
-    eval_dataset = EvalDataset(args.input_path, debug=False)
+    if args.use_query:
+        eval_dataset = QueryDataset(args.input_path, debug=False)
+    else:
+        eval_dataset = EvalDataset(args.input_path, debug=False)
     eval_iter = data.DataLoader(dataset=eval_dataset,
                                  batch_size=args.batch_size,
                                  shuffle=False,
@@ -163,4 +167,7 @@ if __name__=='__main__':
     model.load_state_dict(torch.load(args.ckpt_path))
     model.eval()
 
-    eval_para(model, eval_iter, eval_dataset.sent_id, args.output_path)
+    if args.use_query:
+        eval_query(model, eval_iter, eval_dataset.sent_id, args.output_path)
+    else:
+        eval_para(model, eval_iter, eval_dataset.sent_id, args.output_path)

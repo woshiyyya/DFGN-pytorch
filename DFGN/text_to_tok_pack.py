@@ -128,8 +128,9 @@ def read_hotpot_examples(para_file, full_file, entity_file):
     examples = []
     for case in tqdm(full_data):
         key = case['_id']
-        qas_type = ""  # case['type']
-        sup_facts = set()  # set([(sp[0], sp[1])for sp in case['supporting_facts']])
+        qas_type = case['type']
+        sup_facts = set([(sp[0], sp[1]) for sp in case['supporting_facts']])
+        orig_answer_text = case['answer']
 
         sent_id = 0
         doc_tokens = []
@@ -139,6 +140,9 @@ def read_hotpot_examples(para_file, full_file, entity_file):
         para_start_end_position = []
         entity_start_end_position = []
         ans_start_position, ans_end_position = [], []
+
+        JUDGE_FLAG = orig_answer_text == 'yes' or orig_answer_text == 'no'
+        FIND_FLAG = False
 
         char_to_word_offset = []  # Accumulated along all sentences
         prev_is_whitespace = True
@@ -184,6 +188,25 @@ def read_hotpot_examples(para_file, full_file, entity_file):
                 sent_end_word_id = len(doc_tokens) - 1
                 sent_start_end_position.append((sent_start_word_id, sent_end_word_id))
 
+                # Answer char position
+                answer_offsets = []
+                offset = -1
+                while True:
+                    offset = sent.find(orig_answer_text, offset + 1)
+                    if offset != -1:
+                        answer_offsets.append(offset)
+                    else:
+                        break
+
+                # answer_offsets = [m.start() for m in re.finditer(orig_answer_text, sent)]
+                if not JUDGE_FLAG and not FIND_FLAG and len(answer_offsets) > 0:
+                    FIND_FLAG = True
+                    for answer_offset in answer_offsets:
+                        start_char_position = sent_start_char_id + answer_offset
+                        end_char_position = start_char_position + len(orig_answer_text) - 1
+                        ans_start_position.append(char_to_word_offset[start_char_position])
+                        ans_end_position.append(char_to_word_offset[end_char_position])
+
                 # Find Entity Position
                 entity_pointer = 0
                 find_start_index = 0
@@ -222,7 +245,7 @@ def read_hotpot_examples(para_file, full_file, entity_file):
             para_start_end_position=para_start_end_position,
             sent_start_end_position=sent_start_end_position,
             entity_start_end_position=entity_start_end_position,
-            orig_answer_text="",
+            orig_answer_text=orig_answer_text,
             start_position=ans_start_position,
             end_position=ans_end_position)
         examples.append(example)
@@ -234,7 +257,12 @@ def convert_examples_to_features(examples, tokenizer, max_seq_length, max_query_
     features = []
     failed = 0
     for (example_index, example) in enumerate(tqdm(examples)):
-        ans_type = 0
+        if example.orig_answer_text == 'yes':
+            ans_type = 1
+        elif example.orig_answer_text == 'no':
+            ans_type = 2
+        else:
+            ans_type = 0
 
         query_tokens = ["[CLS]"] + tokenizer.tokenize(example.question_text)
         if len(query_tokens) > max_query_length - 1:
@@ -279,6 +307,10 @@ def convert_examples_to_features(examples, tokenizer, max_seq_length, max_query_
                 all_doc_tokens, tok_start_position, tok_end_position, tokenizer, orig_text)
 
         ans_start_position, ans_end_position = [], []
+        for ans_start_pos, ans_end_pos in zip(example.start_position, example.end_position):
+            s_pos, e_pos = relocate_tok_span(ans_start_pos, ans_end_pos, example.orig_answer_text)
+            ans_start_position.append(s_pos)
+            ans_end_position.append(e_pos)
 
         for entity_span in example.entity_start_end_position:
             ent_start_position, ent_end_position \
