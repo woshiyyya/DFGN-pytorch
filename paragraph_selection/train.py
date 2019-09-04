@@ -46,13 +46,11 @@ class DataProcessor(object):
     def get_train_examples(self, data_dir):
         logger.info("LOOKING AT {}".format(os.path.join(data_dir, "hotpot_ss_train.csv")))
         train_path = os.path.join(data_dir, "hotpot_ss_train.csv")
-        # train_path = os.path.join(data_dir, "hotpot_ss_small.csv")
         return self._create_examples(
             pandas.read_csv(train_path), set_type='train')
 
     def get_dev_examples(self, data_dir):
         dev_path = os.path.join(data_dir, "hotpot_ss_dev.csv")
-        # dev_path = os.path.join(data_dir, "hotpot_ss_small.csv")
         return self._create_examples(
             pandas.read_csv(dev_path), set_type='dev')
 
