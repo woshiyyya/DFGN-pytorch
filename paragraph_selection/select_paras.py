@@ -198,7 +198,7 @@ def softmax(x):
     return e_x / e_x.sum(axis=1, keepdims=True)
 
 
-def get_selected_paras(data, pred_score, output_path):
+def get_dev_paras(data, pred_score, output_path):
 
     logits = np.array([pred_score['logits0'], pred_score['logits1']]).transpose()
     pred_score['prob'] = softmax(logits)[:, 1]
@@ -227,6 +227,36 @@ def get_selected_paras(data, pred_score, output_path):
 
     Selected_paras_num = [len(Paragraphs[key]) for key in Paragraphs]
     print("Selected Paras Num:", Counter(Selected_paras_num))
+
+    json.dump(Paragraphs, open(output_path, 'w'))
+
+
+def get_train_paras(source_data, score, output_path):
+    # + Negative Sample.
+    logits = np.array([score['logits0'], score['logits1']]).transpose()
+    score['prob'] = softmax(logits)[:, 1]
+    score = np.array(score['prob'])
+    Paragraphs = dict()
+    ptr = 0
+    for case in tqdm(source_data):
+        key = case['_id']
+        Paragraphs[key] = []
+        para_ids = []
+        gold = set([para[0] for para in case['supporting_facts']])
+
+        for i, para in enumerate(case['context']):
+            if para[0] in gold:
+                Paragraphs[key].append(para)
+                para_ids.append(i)
+
+        tem_score = score[ptr:ptr + len(case['context'])]
+        ptr += len(case['context'])
+        sorted_id = sorted(range(len(tem_score)), key=lambda k: tem_score[k], reverse=True)
+
+        for i in sorted_id:
+            if i not in para_ids:
+                Paragraphs[key].append(case['context'][i])
+                break
 
     json.dump(Paragraphs, open(output_path, 'w'))
 
@@ -264,5 +294,8 @@ if __name__ == "__main__":
     features = convert_examples_to_features(examples, label_list, args.max_seq_length, tokenizer, verbose=True)
 
     score, _, _ = evaluate()
-    get_selected_paras(source_data, score, args.output_path)
+    if args.split == 'dev':
+        get_dev_paras(source_data, score, args.output_path)
+    elif args.split == 'train':
+        get_train_paras(source_data, score, args.output_path)
 

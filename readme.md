@@ -73,11 +73,12 @@ First, download model checkpoints and save them in **./work_dir**
 - [bert_ner.pt](https://drive.google.com/open?id=1arXwD89DtVNOOC49CMoXP3-iiIkOMrI-)
 - [para_select_model.bin](https://drive.google.com/open?id=1tcBCs3Td6pAAmO6DIvqyUfI66XHqSlVE)
 
-Then run preprocess.sh as below, replacing ${INPUT_FILE} as the official train/dev file, and ${OUTPUT_DIR} as any name you like. You can finally
- get all preprocessed files in **\work_dir\OUTPUT_DIR** 
+Then run preprocess.sh as below, replacing ${TRAIN_FILE}, ${DEV_FILE} as the official train/dev file. You can finally
+ get all preprocessed files in **\work_dir\dev** and **\work_dir\train**
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 bash preprocess.sh ${INPUT_FILE} ${OUTPUT_DIR}
+CUDA_VISIBLE_DEVICES=0 bash preprocess.sh ${DEV_FILE} dev
+CUDA_VISIBLE_DEVICES=0 bash preprocess.sh ${TRAIN_FILE} train
 ```
 
 

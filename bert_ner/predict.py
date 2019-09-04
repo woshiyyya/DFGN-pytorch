@@ -124,21 +124,15 @@ def eval_query(model, iterator, sent_ids, output_path):
 
     entities = dict()
     # gets results and save
-    with open("result.txt", 'w') as fout:
-        for i, (words, is_heads, tags, y_hat) in enumerate(zip(Words, Is_heads, Tags, Y_hat)):
-            y_hat = [hat for head, hat in zip(is_heads, y_hat) if head == 1]
-            preds = [idx2tag[hat] for hat in y_hat]
-            assert len(preds) == len(words), f'len(preds)={len(preds)}, len(words)={len(words)}'
-
-            words, preds = words[1:-2], preds[1:-2]  # remove the last punctuation "?"
-            preds = tag_numbers(words, preds)
-            for w, p in zip(words, preds):
-                fout.write(f"{w} {p}\n")
-            fout.write("\n")
-
-            entity = get_entities(words, preds)
-            key = sent_ids[i][0]
-            entities[key] = entity
+    for i, (words, is_heads, tags, y_hat) in enumerate(zip(Words, Is_heads, Tags, Y_hat)):
+        y_hat = [hat for head, hat in zip(is_heads, y_hat) if head == 1]
+        preds = [idx2tag[hat] for hat in y_hat]
+        assert len(preds) == len(words), f'len(preds)={len(preds)}, len(words)={len(words)}'
+        words, preds = words[1:-2], preds[1:-2]  # remove the last punctuation "?"
+        preds = tag_numbers(words, preds)
+        entity = get_entities(words, preds)
+        key = sent_ids[i][0]
+        entities[key] = entity
     json.dump(entities, open(output_path, 'w'))
     return
 

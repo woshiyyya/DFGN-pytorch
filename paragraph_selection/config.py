@@ -6,6 +6,7 @@ def set_args():
     parser.add_argument("--input_path", type=str, required=True)
     parser.add_argument("--ckpt_path", type=str, required=True)
     parser.add_argument("--output_path", type=str, required=True)
+    parser.add_argument("--split", type=str, default='dev')
     parser.add_argument("--name",
                         default="Evaluation",
                         type=str)
