@@ -114,7 +114,7 @@ python hotpot_evaluate_all.py output/submissions/YOUR_EXPNAME data/hotpot_dev_di
 ## Inference using our released model 
 ```bash
 python predict.py
-python hotpot_evaluate_v1.py output/submissions/prediction.json data/hotpot_dev_distractor_v1.json
+python hotpot_evaluate_v1.py output/submission/prediction.json data/hotpot_dev_distractor_v1.json
 ```
 
 You may get similar results like this:
